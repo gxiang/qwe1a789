@@ -58,34 +58,58 @@
       // 4. The API will call this function when the video player is ready.
       function onPlayerReady(event) {
         $('.skin').click(function(){
-            event.target.playVideo();
-            $(this).css('background', 'green');
+            event.target.playVideo();            
         });
       }
 
       // 5. The API calls this function when the player's state changes.
       //    The function indicates that when playing a video (state=1),
       //    the player should play for six seconds and then stop.
-      var done = false;
-      function onPlayerStateChange(event) {
-        if (event.data == YT.PlayerState.PLAYING && !done) {
-          setTimeout(stopVideo, 6000);
-          done = true;
-        }else if( event.data == YT.PlayerState.PAUSED ){
+      var lastStateChange;
+      function onPlayerStateChange(event) { 
+        lastStateChange = event.data;       
+        switch( event.data ){
+            case -1:
+                console.log( 'State event unstarted', event.data );
+                break;
+            case 0:
+                console.log( 'State event ended', event.data );
+                break;
+            case 1:
+                console.log( 'State event playing', event.data );
+                break;
+            case 2:
+                console.log( 'State event paused', event.data );
+                break;
+            case 3:
+                console.log( 'State event buffering', event.data );
+                break;
+            case 5:
+                console.log( 'State event video cued', event.data );
+                break;
+        }
+        lastStateChange = event.data;
 
-                setTimeout(function(){
-                  if( event.data == YT.PlayerState.PAUSED ){
-                    $('.skin').css('background', 'orange');                   
-                    player.pauseVideo();
-                  }
-                }, 1000);
-                
-              }else if( event.data == YT.PlayerState.ENDED ){
-                $('.skin').css('background', 'red');               
-              }     
+        if (event.data == YT.PlayerState.PLAYING ) {
+            $('.skin').css('background', 'green');
+        }else if( event.data == YT.PlayerState.PAUSED ){
+            pauseVideo();
+        }else if( event.data == YT.PlayerState.ENDED ){
+            $('.skin').css('background', 'red');               
+        }     
       }
+
       function stopVideo() {
         player.stopVideo();
+      }
+
+      function pauseVideo() {       
+        setTimeout(function(){
+            if( lastStateChange == 2 ){
+                $('.skin').css('background', 'orange');
+                player.pauseVideo();
+            }
+        }, 1000);
       }
     </script>
 
