@@ -30,7 +30,7 @@
 
         </style>
         <div class="skin"></div>
-        <div id="player"></div>
+    <div id="player"></div>
 
     <script>
       // 2. This code loads the IFrame Player API code asynchronously.
@@ -48,6 +48,9 @@
           height: '390',
           width: '640',
           videoId: 'g5vVRcP5sUI',
+          playerVars: { 
+              'wmode': 'opaque', // To send Youtube behind
+              'controls' : 0 },
           events: {
             'onReady': onPlayerReady,
             'onStateChange': onPlayerStateChange
@@ -57,6 +60,7 @@
 
       // 4. The API will call this function when the video player is ready.
       function onPlayerReady(event) {
+        console.log( 'PlayerReady Leh');
         $('.skin').click(function(){
             event.target.playVideo();            
         });
@@ -74,29 +78,32 @@
                 break;
             case 0:
                 console.log( 'State event ended', event.data );
+                $('.skin').css('background', 'red');       
                 break;
             case 1:
                 console.log( 'State event playing', event.data );
+                 $('.skin').css('background', 'green');
                 break;
             case 2:
                 console.log( 'State event paused', event.data );
+                pauseVideo();
                 break;
             case 3:
                 console.log( 'State event buffering', event.data );
+                //bufferVideo();
                 break;
             case 5:
                 console.log( 'State event video cued', event.data );
                 break;
         }
-        lastStateChange = event.data;
-
-        if (event.data == YT.PlayerState.PLAYING ) {
-            $('.skin').css('background', 'green');
-        }else if( event.data == YT.PlayerState.PAUSED ){
-            pauseVideo();
-        }else if( event.data == YT.PlayerState.ENDED ){
-            $('.skin').css('background', 'red');               
-        }     
+        console.log( 'last state ', lastStateChange );
+        // if (event.data == YT.PlayerState.PLAYING ) {
+           
+        // }else if( event.data == YT.PlayerState.PAUSED ){
+        //     pauseVideo();
+        // }else if( event.data == YT.PlayerState.ENDED ){
+                    
+        // }else if( event.data)    
       }
 
       function stopVideo() {
@@ -110,6 +117,18 @@
                 player.pauseVideo();
             }
         }, 1000);
+      }
+
+      function bufferVideo(){
+        bufferInterval = setInterval(function(){
+            if( lastStateChange == 3 ){
+                console.log( 'ask play');
+                $('.skin').css('background', 'orange');
+                player.playVideo();
+            }else{
+                clearInterval( bufferInterval );
+            }
+        }, 1000); 
       }
     </script>
 
