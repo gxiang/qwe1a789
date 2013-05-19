@@ -59,10 +59,9 @@
       }
 
       // 4. The API will call this function when the video player is ready.
-      function onPlayerReady(event) {
-        console.log( 'PlayerReady Leh');
+      function onPlayerReady(event) {        
         $('.skin').click(function(){
-            event.target.playVideo();            
+            player.playVideo();            
         });
       }
 
