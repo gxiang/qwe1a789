@@ -3,7 +3,7 @@
 
 		// Default Setting
 		var setting = $.extend({
-			debug		: false,			
+			debug		: false,
 			highlighter	: '.expoActive',
 			wrapper		: '.expoWrapper',
 			startFrom	: 0,
@@ -25,35 +25,38 @@
 			animateAction	: false,
 
 			// Mobile Detection
-			mobile : mobileCheck(),			
+			mobile : mobileCheck(),
 		}, options );
 
 		var child;
-		var childInfo = {	
+		var childInfo = {
 				len		: -1,
 				width	: null,
 				highlightIndex	: null,
-				cleanHighlighter : null				
+				cleanHighlighter : null
 			};
 		var childPos = [];
+		var wrapper = null;
 
 		// Bind Console for shorten console.log
 		// and enable turn on/off log immediately with setting		
 		var log = setting.debug ? console.log.bind( console ) : $.noop;
 		console.log( 'Debug mode now is ' + setting.debug );
-	
-		return this.each( function(){					
+
+		return this.each( function(){
 			hen = $(this);
-			child =	hen.children();				
+			child =	hen.children();
 				childInfo.len	= child.length,
 				childInfo.width = getTotalWidth(child),
 				childInfo.highlightIndex = initialHighlighter(child, hen),
-				childInfo.cleanHighlighter = analyseSelector( setting.highlighter );			
+				childInfo.cleanHighlighter = analyseSelector( setting.highlighter );
 
-			log( "\t[EXPO] You have "+ childInfo.len + " child");			
+			log( "\t[EXPO] You have "+ childInfo.len + " child");
+
+			init();
 
 			// Go Previous
-			$( setting.prev ).on('click', function(){				
+			$( setting.prev ).on('click', function(){
 				updateHighlighter( setting.prev );
 			});
 			// Go Next
@@ -64,9 +67,37 @@
 			child.on('click', function(){
 				//updateHighlighter();
 			});
-		});		
+		});
 
-		function initialHighlighter( child, hen ){		
+		function init(){
+			//Create a wrapper for track
+			setTrack(child, hen);
+
+			// child.each(function(index){
+			// 	childPos.push( $(this).position().left );
+			// });
+			getPosition();
+		}
+
+		function getPosition(){
+
+			var dist = 0;
+			// child.each(function( index ){
+
+			// });
+			console.log( childInfo.len );
+			for (var i = 0 ; i < childInfo.len; i++) {
+				thisChild = child.eq(i);
+				thisChild_MarginLeft = parseInt( thisChild.css('margin-left'), 10 );
+				thisChild_MarginRight = parseInt( thisChild.css('margin-right'), 10 );
+
+				childPos.push( dist );
+				dist += thisChild.outerWidth() + thisChild_MarginLeft + thisChild_MarginRight;
+			}
+			return dist;
+		}
+
+		function initialHighlighter( child, hen ){
 			var currentHighlight = 0;
 			var cleanWrapper = setting.wrapper.substring(1);
 			var cleanHighlighter = setting.highlighter.substring(1);
@@ -74,89 +105,78 @@
 			log( "\t[EXPO] Number of Found Highlighter ", $(setting.highlighter).length );
 			log( "\t[EXPO] Highlighter is " + setting.highlighter );
 
-			//Create a wrapper for track
-			setTrack(child, hen);			
-			
 			child.removeClass( cleanHighlighter );
-			child.eq( setting.startFrom ).addClass( cleanHighlighter );			
+			child.eq( setting.startFrom ).addClass( cleanHighlighter );
 
-			child.each(function(index){					
-				childPos.push( $(this).position().left );
-			});
-			
-			console.log(childPos, childPos[0], childPos[2]);
-
-			return setting.startFrom;			
+			return setting.startFrom;
 		}
-		
+
 		function updateHighlighter( direction ){
 			console.log( setting.animateAction );
 			if( !setting.pagination  ){
 				switch( direction ){
-					case setting.prev : 
+					case setting.prev :
 						log( "[EXPO] Current Highlighter ", childInfo.highlightIndex );
-						if( childInfo.highlightIndex > 0 
-							&& childInfo.highlightIndex < childInfo.len 
+						if( childInfo.highlightIndex > 0
+							&& childInfo.highlightIndex < childInfo.len
 							&& childInfo.highlightIndex != 0 ){
-
-							child.eq(childInfo.highlightIndex).removeClass(childInfo.cleanHighlighter);							
-								childInfo.highlightIndex--;								
-							child.eq(childInfo.highlightIndex).addClass(childInfo.cleanHighlighter);							
+							child.eq(childInfo.highlightIndex).removeClass(childInfo.cleanHighlighter);
+								childInfo.highlightIndex--;
+							child.eq(childInfo.highlightIndex).addClass(childInfo.cleanHighlighter);
 						}else{
-							log( "[EXPO] Reach first" );							
+							log( "[EXPO] Reach first" );
 						}
 						log( "[EXPO] Moving Prevous" );
 						break;
 
-					case setting.next : 
+					case setting.next :
 						log( "[EXPO] childInfo Highlighter ", childInfo.highlightIndex );
 						if( ( childInfo.highlightIndex + 1 ) < childInfo.len ){
-							child.eq(childInfo.highlightIndex).removeClass(childInfo.cleanHighlighter);							
+							child.eq(childInfo.highlightIndex).removeClass(childInfo.cleanHighlighter);
 								childInfo.highlightIndex++;
-							child.eq(childInfo.highlightIndex).addClass(childInfo.cleanHighlighter);							
+							child.eq(childInfo.highlightIndex).addClass(childInfo.cleanHighlighter);
 						}else{
-							log( "[EXPO] Reach last" );							
+							log( "[EXPO] Reach last" );
 						}
 						log( "[EXPO] Moving Next" );
 						break;
 				}
-				
-				console.log( $(setting.wrapper).position() );
-				var wrapperPosLeft = getPosition( $(setting.wrapper) , 0);
-				
-				var targetPos = childPos[ childInfo.highlightIndex ] - wrapperPosLeft;
-				log( "[EXPO] Highlighter Pos ", childPos[ childInfo.highlightIndex ] , wrapperPosLeft );
-				
-				log( "[EXPO] Target Pos ", targetPos );
-				var mobile = setting.mobile;			
+
+				// console.log( $(setting.wrapper).position() );
+				// var wrapperPosLeft = getPosition( $(setting.wrapper) , 0);
+				// var targetPos = childPos[ childInfo.highlightIndex ] - wrapperPosLeft;
+
+				// log( "[EXPO] Highlighter Pos ", childPos[ childInfo.highlightIndex ] , wrapperPosLeft );
+				// log( "[EXPO] Target Pos ", targetPos );
+
+				var mobile = setting.mobile;
 				var goAnimate = (( setting.nonMobileAnimate && !mobile ) || ( setting.mobileAnimate && mobile )) ? true : false;
 
+
+				var wrapper = {
+					width : $(setting.wrapper).width(),
+					halveWidth : $(setting.wrapper).width()/2
+				};
+
+
+
 				if( goAnimate ){
-					setting.animateAction = true;
+				//	targetPos = getDist( childInfo.highlightIndex );
+					//console.log( 'targetPos', targetPos );
+					//$(setting.wrapper).scrollLeft( targetPos );
+					// setting.animateAction = true;
+					// if( targetPos > setting.wrapper ){
+
+					// }
+					console.log( 'curr Pos ', childInfo.highlightIndex , childPos[ childInfo.highlightIndex ] );
 					$(setting.wrapper).animate({
-					scrollLeft: targetPos }, setting.horizontalSpeed , function(){
+						scrollLeft: childPos[ childInfo.highlightIndex ]
+					}, setting.horizontalSpeed , function(){
 						setting.animateAction = false;
 					});
 				}else{
-					$(setting.wrapper).scrollLeft( targetPos );
-				}				
-			}
-		}	
-
-		function getPosition( selector , times){
-			console.log( 'Times  ', times);
-			var selectorLeft = selector.position().left;
-			if( selectorLeft != 0 ){
-				console.log( 'IF 0.5 ', selectorLeft );
-				//console.log( selector.parent().position().left );
-				return getPosition( selector.parent() , times+1 );
-			}else if( selectorLeft == 0 ){
-				selectorLeft = parseInt( selector.css('margin-left'), 10);
-				console.log( 'IF 0 ', selectorLeft );
-				console.log( 'IF 0 ', selector.css('margin') );
-				return selectorLeft;
-			}else{
-				return selectorLeft;
+					// $(setting.wrapper).scrollLeft( targetPos );
+				}
 			}
 		}
 
@@ -181,7 +201,7 @@
 				//log( "[EXPO] ", $(this).outerWidth() );				
 				marginLeft = parseInt($(this).css('margin-left'), 10);
 				marginRight = parseInt($(this).css('margin-right'), 10);
-				
+
 				totalWidth += $(this).outerWidth() + marginLeft + marginRight;
 			});
 			log( "\t[EXPO] Total Width ", totalWidth );
