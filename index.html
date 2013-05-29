@@ -43,6 +43,7 @@
 
     }
         .list{ float: left; width: 100px; height: 40px; background: #2ca7dc; color: white; text-align: center; margin-left: 10px; }
+        .list.odd{ width: 50px; }
         .list:first-child{ margin-left: 0; }
         .list.activeSlide{ border: 2px solid #003760; }
 
@@ -53,13 +54,14 @@
     }
     .expoWrapper{
         margin: 0 auto;
-        overflow: auto !important;
-      /*  position: absolute;
-        top: 20px;
-        left: 200px;*/
+    }
+    .expoWrapper-2
+    {
+        margin: 0 auto;
+        overflow: auto !important;     
     }
 </style>
-        <nav>
+        <nav class="less">
             <a class="prev test more">prev</a>
             <a class="next">next</a>
         </nav>
@@ -69,26 +71,46 @@
             <div class="item three">3</div>
             <div class="item four">4</div>
         </div>  
-        <div class="test-wrapper">
-            <ul class="list-wrapper">
-                <li class="list activeSlide">1</li>
-                <li class="list">2</li>
-                <li class="list">3</li>
-                <li class="list">4</li>
-                <li class="list">1</li>
-                <li class="list">2</li>
-                <li class="list">3</li>
-                <li class="list">4</li>
-                <li class="list">2</li>
-                <li class="list">3</li>
-                <li class="list">4</li>
-                <li class="list">1</li>
-                <li class="list">2</li>
-                <li class="list">3</li>
-                <li class="list">4</li>
-            </ul>
-        </div>
+        <ul class="list-wrapper one">
+            <li class="list activeSlide">1</li>
+            <li class="list">2</li>
+            <li class="list odd">3</li>
+            <li class="list">4</li>
+            <li class="list">1</li>
+            <li class="list">2</li>
+            <li class="list odd">3</li>
+            <li class="list odd">4</li>
+            <li class="list">2</li>
+            <li class="list">3</li>
+            <li class="list odd">4</li>
+            <li class="list">1</li>
+            <li class="list odd">2</li>
+            <li class="list">3</li>
+            <li class="list">4</li>
+        </ul>
         
+        <nav class="more">
+            <a class="prev test more">prev</a>
+            <a class="next">next</a>
+        </nav>
+
+        <ul class="list-wrapper two">
+            <li class="list activeSlide">1</li>
+            <li class="list">2</li>
+            <li class="list odd">3</li>
+            <li class="list">4</li>
+            <li class="list">1</li>
+            <li class="list">2</li>
+            <li class="list odd">3</li>
+            <li class="list odd">4</li>
+            <li class="list">2</li>
+            <li class="list">3</li>
+            <li class="list odd">4</li>
+            <li class="list">1</li>
+            <li class="list odd">2</li>
+            <li class="list">3</li>
+            <li class="list">4</li>
+        </ul>       
 
         <!--
             <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>

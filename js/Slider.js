@@ -11,6 +11,7 @@
 			debug		: false,
 			highlighter	: '.expoActive',
 			wrapper		: '.expoWrapper',
+			//wrapper		: 'expoWrapper',
 			startFrom	: 0,
 			displayChild: 3,
 
@@ -40,8 +41,14 @@
 				highlightIndex	: null,
 				cleanHighlighter : null
 			};
-		var childInfo = [];
+		var childInfo = {
+			movePosition: [],
+			moveNext	: [],
+			movePrev	: []
+		};
+
 		var childPos = [];
+		var childMove = [];
 		var wrapper = null;
 
 		// Bind Console for shorten console.log
@@ -70,42 +77,48 @@
 				updateHighlighter( setting.next );
 			});
 			// Click on child
-			child.on('click', function(){
-				updateHighlighter();
+			child.on('click', function(){				
+				updateHighlighter( 'click' , $(this).index() );
 			});
 		});
 
 		function init(){
-			//Create a wrapper for track
-			setTrack(child, hen);
-
-			// child.each(function(index){
-			// 	childPos.push( $(this).position().left );
-			// });
-			getPosition();
-			console.log( childPos );
+			// Create a wrapper for track
+			setTrack(child, hen);			
+			getPosition();						
 		}
 
 		function getPosition(){
 
 			var dist = 0;
-			// child.each(function( index ){
-			var thisInfo = [];
-			// });
-			console.log( childrenInfo.len );
+			var moveNext = false;	// To decide whether slide shall move when reach the child
+			var measureDist = 0;
+			var givenWrapper = $(setting.wrapper);
+			var movePrev = 0;
+
 			for (var i = 0 ; i < childrenInfo.len; i++) {
 				thisChild = child.eq(i);
 				thisChild_MarginLeft = parseInt( thisChild.css('margin-left'), 10 );
 				thisChild_MarginRight = parseInt( thisChild.css('margin-right'), 10 );
 
 				childPos.push( dist );
-				dist += thisChild.outerWidth() + thisChild_MarginLeft + thisChild_MarginRight;
+				childInfo.movePosition.push( dist );
 
-				childWidth = thisChild.outerWidth() + thisChild_MarginLeft + thisChild_MarginRight;
-
-
-				// console.log( $(setting.wrapper).width(), childWidth );
-				// console.log( $(setting.wrapper).width()/childWidth );
+				currentChildWidth = thisChild.outerWidth() + thisChild_MarginLeft + thisChild_MarginRight;
+				dist += currentChildWidth
+				measureDist += currentChildWidth;
+				
+				if( measureDist >= givenWrapper.width() ){
+					moveNext = true;
+					measureDist = currentChildWidth;	// reset measureDist
+					childInfo.movePrev[i-1] = movePrev;
+					movePrev = i;
+				}else{
+					moveNext = false;
+					childInfo.movePrev[i-1] = -1;
+				}				
+				childMove.push( moveNext );
+				childInfo.moveNext.push( moveNext );
 			}
 			return dist;
 		}
@@ -124,8 +137,7 @@
 			return setting.startFrom;
 		}
 
-		function updateHighlighter( direction ){
-			console.log( setting.animateAction );
+		function updateHighlighter( direction , selectIndex ){			
 			if( !setting.pagination  ){
 				switch( direction ){
 					// Move Previous
@@ -154,42 +166,56 @@
 						}
 						// log( "[EXPO] Moving Next" );
 						break;
+					// If click directly
+					case 'click' :
+						child.eq(childrenInfo.highlightIndex).removeClass(childrenInfo.cleanHighlighter);
+								childrenInfo.highlightIndex = selectIndex;
+						child.eq( childrenInfo.highlightIndex ).addClass(childrenInfo.cleanHighlighter);
+
+						console.log( 'click Index', selectIndex );
+						break;
 				}
 
 				var mobile = setting.mobile;
-				var goAnimate = (( setting.nonMobileAnimate && !mobile ) || ( setting.mobileAnimate && mobile )) ? true : false;
+				var goAnimate = (( setting.nonMobileAnimate && !mobile ) || ( setting.mobileAnimate && mobile )) ? true : false;				
+				var goAnimate = true;
 				var wrapper = {
 					width : $(setting.wrapper).width(),
 					halveWidth : $(setting.wrapper).width()/2
 				};
 
-				if( goAnimate ){
-					posToMove = childPos[ childrenInfo.highlightIndex ];
+				makeMove = childInfo.moveNext[ childrenInfo.highlightIndex ];
 
-					console.log( 'check', posToMove % wrapper.width , wrapper.width );
-					// $(setting.wrapper).animate({
-					// 	scrollLeft: posToMove
-					// }, setting.horizontalSpeed , function(){
-					// 	setting.animateAction = false;
-					// });
+				currentScrollPos = $(setting.wrapper).scrollLeft();				
+				posToMove = childInfo.movePosition[ childrenInfo.highlightIndex ];	
 
-					if( posToMove > wrapper.width ){
-						console.log('move ', posToMove);
-						$(setting.wrapper).animate({
-							scrollLeft: posToMove
-						}, setting.horizontalSpeed , function(){
-							setting.animateAction = false;
-						});
-					}else{
-						//console.log()
-						
-					}
-					//console.log( 'curr Pos ', childrenInfo.highlightIndex , childPos[ childrenInfo.highlightIndex ], 'halve', wrapper.halveWidth );
-
-							
+				console.log( currentScrollPos-posToMove , $(setting.wrapper).width() );
+				if( makeMove ){
+					moveToPosition( posToMove, goAnimate );
+				}else if( direction == setting.prev && childInfo.movePrev[ childrenInfo.highlightIndex ] != -1 ){
+					posToMove = childInfo.movePosition[ childInfo.movePrev[ childrenInfo.highlightIndex ] ];
+					moveToPosition( posToMove, goAnimate );
+				}else if( currentScrollPos != posToMove ){
+					// Try to check if the user has scrolled the slide him/herself
+					// and are we going to detect where is scroll now and bring user back the highlight child 
+					// when they click "prev" and "next" again.
+					
+					//moveToPosition( posToMove, goAnimate );
 				}else{
-					// $(setting.wrapper).scrollLeft( targetPos );
+					// Do Nothing ...
 				}
+			}
+		}		
+
+		function moveToPosition( posToMove, animate ){
+			if( animate ){
+				$(setting.wrapper).animate({
+					scrollLeft: posToMove
+				}, setting.horizontalSpeed , function(){
+					setting.animateAction = false;
+				});
+			}else{
+				$(setting.wrapper).scrollLeft( posToMove );
 			}
 		}
 
@@ -224,8 +250,7 @@
 
 		function getTotalHeight( child ){
 			var totalHeight = 0;
-			child.each(function(){
-				//log( "[EXPO] ", $(this).outerWidth() );
+			child.each(function(){				
 				totalHeight += $(this).outerHeight();
 			});
 			log( "\t[EXPO] Total Height ", totalHeight );
@@ -248,9 +273,13 @@
 
 		function setTrack( child, hen ){
 			log( "[EXPO Func] setTrack called." );
-			//var cleanWrapper = analyseSelector( setting.wrapper );
+			var wrapper = document.createElement('div');
+			wrapper.className = setting.wrapper;
 			hen.wrap('<div class="'+ analyseSelector( setting.wrapper ) +'" />');
-			$(setting.wrapper).css({
+			//hen.wrap( wrapper );
+
+			console.log( wrapper, wrapper.className );
+			$( setting.wrapper ).css({
 				'height' : getHighestChild( child ),
 				'overflow' : 'hidden',
 				'width' :  hen.css('width'),
