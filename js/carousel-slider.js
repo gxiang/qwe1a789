@@ -1,5 +1,5 @@
 /*
-*	expoSlider
+*	carousel-slider
 *	Authored by Kang Guang Xiang
 *	version 1.0
 */
@@ -21,6 +21,7 @@
 			prev		: '.expoPrev',
 			next		: '.expoNext',
 			pagination	: false,
+            loop        : false,
 
 			// Slider setting
 			nonMobileAnimate: true,
@@ -31,7 +32,7 @@
 			animateAction	: false,
 
 			// Mobile Detection
-			mobile : mobileCheck(),
+			mobile : mobileCheck()
 		}, options );
 
 		var child;
@@ -44,7 +45,8 @@
 		var childInfo = {
 			movePosition: [],
 			moveNext	: [],
-			movePrev	: []
+			movePrev	: [],
+            width       : []
 		};
 
 		var childPos = [];
@@ -52,8 +54,12 @@
 		var wrapper = null;
 
 		// Bind Console for shorten console.log
-		// and enable turn on/off log immediately with setting		
-		var log = setting.debug ? console.log.bind( console ) : $.noop;
+		// and enable turn on/off log immediately with setting
+
+        // Comment due to IE8 does not support bind.
+		//var log = setting.debug ? console.log.bind( console ) : $.noop;
+        var log = $.noop;
+
 		console.log( 'Debug mode now is ' + setting.debug );
 
 		return this.each( function(){
@@ -77,16 +83,22 @@
 				updateHighlighter( setting.next );
 			});
 			// Click on child
-			child.on('click', function(){				
+			child.on('click', function(){
 				updateHighlighter( 'click' , $(this).index() );
 			});
 		});
 
 		function init(){
 			// Create a wrapper for track
-			setTrack(child, hen);			
-			getPosition();						
+			setTrack(child, hen);
+			getPosition();
+            console.log( childInfo, $(setting.wrapper).width() );
 		}
+
+        function clone(args) {
+            //code
+
+        }
 
 		function getPosition(){
 
@@ -98,27 +110,43 @@
 
 			for (var i = 0 ; i < childrenInfo.len; i++) {
 				thisChild = child.eq(i);
-				thisChild_MarginLeft = parseInt( thisChild.css('margin-left'), 10 );
-				thisChild_MarginRight = parseInt( thisChild.css('margin-right'), 10 );
+				thisChild_MarginLeft = ( thisChild.css('margin-left') != 'auto' ) ? parseInt( thisChild.css('margin-left'), 10 ) : 0 ;
+				thisChild_MarginRight = ( thisChild.css('margin-right') != 'auto' ) ? parseInt( thisChild.css('margin-right'), 10 ) : 0 ;
 
 				childPos.push( dist );
 				childInfo.movePosition.push( dist );
 
+                console.log(thisChild.outerWidth(), thisChild_MarginLeft, thisChild_MarginRight );
+
 				currentChildWidth = thisChild.outerWidth() + thisChild_MarginLeft + thisChild_MarginRight;
 				dist += currentChildWidth
 				measureDist += currentChildWidth;
-				
+
 				if( measureDist >= givenWrapper.width() ){
 					moveNext = true;
 					measureDist = currentChildWidth;	// reset measureDist
 					childInfo.movePrev[i-1] = movePrev;
 					movePrev = i;
+                     //console.log( i, "measureDist >", measureDist, moveNext, movePrev );
 				}else{
-					moveNext = false;
-					childInfo.movePrev[i-1] = -1;
-				}				
+                    //console.log( i, "measureDist <", measureDist, moveNext, movePrev  );
+
+                    if ( setting.loop && i == 0 ) {
+                        //code
+                        moveNext = true;
+                        childInfo.movePrev[childrenInfo.len-1] = childrenInfo.len-1;
+                    }else{
+                        moveNext = false;
+                        childInfo.movePrev[i-1] = -1;
+                    }
+
+				}
 				childMove.push( moveNext );
 				childInfo.moveNext.push( moveNext );
+
+                //console.log( childInfo.moveNext );
+                console.log( childInfo.movePrev );
+
 			}
 			return dist;
 		}
@@ -137,7 +165,7 @@
 			return setting.startFrom;
 		}
 
-		function updateHighlighter( direction , selectIndex ){			
+		function updateHighlighter( direction , selectIndex ){
 			if( !setting.pagination  ){
 				switch( direction ){
 					// Move Previous
@@ -146,10 +174,18 @@
 						if( childrenInfo.highlightIndex > 0
 							&& childrenInfo.highlightIndex < childrenInfo.len
 							&& childrenInfo.highlightIndex != 0 ){
+                            console.log(  "here" );
 							child.eq(childrenInfo.highlightIndex).removeClass(childrenInfo.cleanHighlighter);
 								childrenInfo.highlightIndex--;
 							child.eq(childrenInfo.highlightIndex).addClass(childrenInfo.cleanHighlighter);
 						}else{
+                            if ( setting.loop ) {
+                                //code
+                                console.log(  "her2e" )
+                                child.eq(childrenInfo.highlightIndex).removeClass(childrenInfo.cleanHighlighter);
+								childrenInfo.highlightIndex = childrenInfo.len-1;
+                                child.eq(childrenInfo.highlightIndex).addClass(childrenInfo.cleanHighlighter);
+                            }
 							// log( "[EXPO] Reach first" );
 						}
 						// log( "[EXPO] Moving Prevous" );
@@ -162,6 +198,12 @@
 								childrenInfo.highlightIndex++;
 							child.eq(childrenInfo.highlightIndex).addClass(childrenInfo.cleanHighlighter);
 						}else{
+                            if ( setting.loop ) {
+                                //code
+                                child.eq(childrenInfo.highlightIndex).removeClass(childrenInfo.cleanHighlighter);
+								childrenInfo.highlightIndex = 0;
+                                child.eq(childrenInfo.highlightIndex).addClass(childrenInfo.cleanHighlighter);
+                            }
 							// log( "[EXPO] Reach last" );
 						}
 						// log( "[EXPO] Moving Next" );
@@ -177,8 +219,8 @@
 				}
 
 				var mobile = setting.mobile;
-				var goAnimate = (( setting.nonMobileAnimate && !mobile ) || ( setting.mobileAnimate && mobile )) ? true : false;				
-				var goAnimate = true;
+				var goAnimate = (( setting.nonMobileAnimate && !mobile ) || ( setting.mobileAnimate && mobile )) ? true : false;
+
 				var wrapper = {
 					width : $(setting.wrapper).width(),
 					halveWidth : $(setting.wrapper).width()/2
@@ -186,28 +228,30 @@
 
 				makeMove = childInfo.moveNext[ childrenInfo.highlightIndex ];
 
-				currentScrollPos = $(setting.wrapper).scrollLeft();				
-				posToMove = childInfo.movePosition[ childrenInfo.highlightIndex ];	
+				currentScrollPos = $(setting.wrapper).scrollLeft();
+				posToMove = childInfo.movePosition[ childrenInfo.highlightIndex ];
 
-				console.log( currentScrollPos-posToMove , $(setting.wrapper).width() );
+				console.log( childrenInfo.highlightIndex , currentScrollPos-posToMove + ' - ' + $(setting.wrapper).width() );
+
 				if( makeMove ){
-					moveToPosition( posToMove, goAnimate );
+					moveToPosition( posToMove, goAnimate, $(setting.wrapper).width() );
 				}else if( direction == setting.prev && childInfo.movePrev[ childrenInfo.highlightIndex ] != -1 ){
 					posToMove = childInfo.movePosition[ childInfo.movePrev[ childrenInfo.highlightIndex ] ];
-					moveToPosition( posToMove, goAnimate );
+					moveToPosition( posToMove, goAnimate, $(setting.wrapper).width() );
+
 				}else if( currentScrollPos != posToMove ){
 					// Try to check if the user has scrolled the slide him/herself
-					// and are we going to detect where is scroll now and bring user back the highlight child 
+					// and are we going to detect where is scroll now and bring user back the highlight child
 					// when they click "prev" and "next" again.
-					
+
 					//moveToPosition( posToMove, goAnimate );
 				}else{
 					// Do Nothing ...
 				}
 			}
-		}		
+		}
 
-		function moveToPosition( posToMove, animate ){
+		function moveToPosition( posToMove, animate, wrapperWidth ){
 			if( animate ){
 				$(setting.wrapper).animate({
 					scrollLeft: posToMove
@@ -238,7 +282,7 @@
 		function getTotalWidth( child ){
 			var totalWidth = 0;
 			child.each(function(){
-				//log( "[EXPO] ", $(this).outerWidth() );				
+				//log( "[EXPO] ", $(this).outerWidth() );
 				marginLeft = parseInt($(this).css('margin-left'), 10);
 				marginRight = parseInt($(this).css('margin-right'), 10);
 
@@ -250,7 +294,7 @@
 
 		function getTotalHeight( child ){
 			var totalHeight = 0;
-			child.each(function(){				
+			child.each(function(){
 				totalHeight += $(this).outerHeight();
 			});
 			log( "\t[EXPO] Total Height ", totalHeight );
@@ -263,12 +307,14 @@
 			var highest_index;
 			child.each( function( index ){
 				if( $(this).outerHeight() > highest ){
-					highest = $(this).outerHeight();				
+					highest = $(this).outerHeight();
 					highest_index = index;
 					log( "\t[EXPO] highest found child is ", highest_index, highest );
-					return highest;		
-				}				
-			});		
+					return highest;
+				}else{
+                    return 0;
+                }
+			});
 		}
 
 		function setTrack( child, hen ){
@@ -297,7 +343,7 @@
 			var identifyType = sel.substring(0,1);
 			var identifyName = sel.substring(1);
 
-			return identifyName;			
+			return identifyName;
 		}
 	}
 })(jQuery);

@@ -3,17 +3,18 @@ $(document).ready(function(){
 
 //	$('.list-wrapper').slider();
 
-	$('.list-wrapper.one').expoSlider({ 
-		debug: true , 
+	$('.list-wrapper.one').expoSlider({
+		debug: true ,
 		highlighter: '.activeSlide',
 		prev: '.less .prev',
 		next: '.less .next',
+        loop: true,
 		horizontalSpeed: 300,
 		moveAnimate: true
 	});
 
-	$('.list-wrapper.two').expoSlider({ 
-		debug: true , 
+	$('.list-wrapper.two').expoSlider({
+		debug: true ,
 		highlighter: '.activeSlide',
 		wrapper: '.expoWrapper-2',
 		prev: '.more .prev',
